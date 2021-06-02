@@ -17,12 +17,36 @@
 4. Point the web server root to the /web folder inside the main farmOS folder.
     - Locate the nginx directory in your local environment. If Ubuntu 18.04 is used, it would probably be located at **/etc/nginx**. So navigate there.
     - Navigate into **/sites-enabled** directory and sudo nano into the **default** file.
-    - Change the root of the web server to the path to your farmOS web directory.
-    - Add **index.php** to the index 
-    - Pass the PHP scripts to a FastCGI server by adding the following block directive:
-        -       location ~ \.php${  
-                    include snippets/fastcgi-php.conf;  
-                    fastcgi_pass unix:/var/run/php/phpX.X-fpm.sock;  
+    - Modify the default file so it looks like this:
+        -       server {
+                    listen 80;
+                    listen [::]:80;
+                    root #this would be your farmOS /web directory
+                    index  index.php index.html index.htm;
+                    server_name  localhost #for local development
+
+                    location / {
+                        try_files $uri /index.php?$query_string;        
+                    }
+
+                    location @rewrite {
+                            rewrite ^/(.*)$ /index.php?q=$1;
+                        }
+
+                    location ~ [^/]\.php(/|$) {
+                        include snippets/fastcgi-php.conf;
+                        fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+                        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                        include fastcgi_params;
+                    }
+
+                    location ~ ^/sites/.*/files/styles/ { # For Drupal >= 7
+                            try_files $uri @rewrite;
+                    }
+
+                    location ~ ^(/[a-z\-]+)?/system/files/ { # For Drupal >= 7
+                        try_files $uri /index.php?$query_string;
+                    }
                 }
         - *X.X* will be your current php version (If you downloaded php 7.3, X.X will be 7.3)
 5. After all these steps, farmOS should be able to be run on your local environment
