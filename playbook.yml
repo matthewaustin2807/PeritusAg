@@ -42,16 +42,16 @@
        - php7.4-pgsql
    - name: Download farmOS source file
      get_url:
-       url: 'https://github.com/farmOS/farmOS/releases/download/2.0.0-alpha1/farmOS-2.0.0-alpha1.tar.gz'
+       url: 'https://github.com/farmOS/farmOS/releases/download/7.x-1.7/farm-7.x-1.7-core.tar.gz'
        dest: /etc/nginx/
    - name: Unzips the farmOS source file
      unarchive:
-       src: /etc/nginx/farmOS-2.0.0-alpha1.tar.gz
+       src: /etc/nginx/farm-7.x-1.7-core.tar.gz
        dest: /etc/nginx/
        remote_src: True
    - name: deletes the farmOS tarball
      file:
-       path: /etc/nginx/farmOS-2.0.0-alpha1.tar.gz
+       path: /etc/nginx/farm-7.x-1.7-core.tar.gz
        state: absent
    - name: copy default file
      copy:
@@ -65,6 +65,24 @@
        group: root
        state: link
        force: True
+   - name: create sites/default/files/
+     file:
+       path: /etc/nginx/farm-7.x-1.7/sites/default/files/
+       state: directory
+       owner: root
+       group: root
+       mode: '777'
+   - name: copy default.settings.php to settings.php in sites/default
+     copy:
+       src: /etc/nginx/farm-7.x-1.7/sites/default/default.settings.php
+       dest: /etc/nginx/farm-7.x-1.7/sites/default/settings.php
+       remote_src: yes
+   - name: change sites/default/settings.php permissions
+     file:
+       path: /etc/nginx/farm-7.x-1.7/sites/default/settings.php
+       owner: root
+       group: root
+       mode: '777'
    - name: restart nginx service
      service: 
        name: nginx
